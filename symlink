@@ -1,0 +1,28 @@
+#!/bin/env python
+
+"""
+symlinks for windows
+based on https://stackoverflow.com/a/41930586
+"""
+
+import ctypes, sys, os, argparse
+
+def is_admin():
+    try:
+        return ctypes.windll.shell32.IsUserAnAdmin()
+    except:
+        return False
+
+p = argparse.ArgumentParser()
+p.add_argument('to', help='Path to the link`s target.')
+p.add_argument('name', help='Name of the symlink.')
+p.add_argument('--is-dir', help='Force `is directory` flag.', action='store_true')
+args = p.parse_args()
+
+if is_admin():
+    is_dir = True if args.is_dir else os.path.isdir(args.to)
+    os.symlink(args.to, args.name, is_dir)
+else:
+    # Re-run the program with admin rights
+    args = ' '.join(sys.argv)
+    ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, args, None, 0)
