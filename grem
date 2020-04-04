@@ -10,8 +10,9 @@ import subprocess
 
 signal.signal(signal.SIGINT, lambda sig, frame: sys.exit())
 
-TEXT_LIKE = {7,8,9,10,12,13,27} | set(range(0x20, 0x100)) - {0x7f}
+TEXT_LIKE = {7, 8, 9, 10, 12, 13, 27} | set(range(0x20, 0x100)) - {0x7f}
 TEXT_MAP = [x in TEXT_LIKE for x in range(256)]
+
 
 def decode_file(f, b):
     N = 1024
@@ -19,21 +20,25 @@ def decode_file(f, b):
     ts = sum((TEXT_MAP[x] for x in raw))
     maybe_text = ts / N > 0.8
 
-    if not b and not maybe_text: return
+    if not b and not maybe_text:
+        return
 
     f.seek(0)
     return f.read().decode(errors='replace')
 
+
 def colored(s, n):
     return f'\x1b[3{n}m{s}\x1b[0m'
 
+
 def to_git_bash_path(p):
     parts = list(p.parts)
-    
+
     if p.drive:
         parts[0] = f'/{p.drive[:-1].lower()}'
 
     return '/'.join(parts)
+
 
 p = argparse.ArgumentParser()
 p.add_argument('dir', nargs='?', default='.')
@@ -41,13 +46,16 @@ p.add_argument('regex')
 p.add_argument('-f', help='search files instead of text', action='store_true')
 p.add_argument('-d', help='search dirs instead of text', action='store_true')
 p.add_argument('-b', help='search text in binary files', action='store_true')
-p.add_argument('-p', help='test whole file\'s path instead of its name', action='store_true')
+p.add_argument(
+    '-p', help='test whole file\'s path instead of its name', action='store_true')
 p.add_argument('-r', help='recursive', action='store_true')
 p.add_argument('-i', help='ignore-case', action='store_true')
-p.add_argument('-0', help='null-terminated lines for -f and -d', dest='eol', action='store_const', const='\0', default='\n')
+p.add_argument('-0', help='null-terminated lines for -f and -d',
+               dest='eol', action='store_const', const='\0', default='\n')
 p.add_argument('--include', help='search only in these files')
 p.add_argument('--exclude', help='don\'t search in these files')
-p.add_argument('--command', help='include only files for which `COMMAND $path` returns zero exit-code')
+p.add_argument(
+    '--command', help='include only files for which `COMMAND $path` returns zero exit-code')
 
 args = p.parse_args()
 
@@ -89,8 +97,8 @@ for top, dirs, files in os.walk(args.dir):
         # slightly tested (maybe remove?)
         if args.command:
             if subprocess.run(
-                f'{args.command} {path}', 
-                stdout=subprocess.DEVNULL, 
+                f'{args.command} {path}',
+                stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL
             ).returncode:
                 continue
@@ -103,12 +111,14 @@ for top, dirs, files in os.walk(args.dir):
             try:
                 with open(real_path, 'rb') as file:
                     text = decode_file(file, args.b)
-                    if not text: continue
+                    if not text:
+                        continue
 
                     for i, l in enumerate(text.split('\n')):
                         m = reg.search(l)
-                        if not m: continue
-                            
+                        if not m:
+                            continue
+
                         l = l.rstrip()
                         start, end = m.span()
 
@@ -125,8 +135,10 @@ for top, dirs, files in os.walk(args.dir):
                         if ti < len(l):
                             tail = tail + '...'
 
-                        print(f'{colored(path, 3)}:{colored(i + 1, 2)}:{head}{colored(mid, 6)}{tail}')
+                        print(
+                            f'{colored(path, 3)}:{colored(i + 1, 2)}:{head}{colored(mid, 6)}{tail}')
             except Exception as e:
                 print(f'{colored(path, 3)}:{colored(e, 1)}', file=sys.stderr)
 
-    if not args.r: break
+    if not args.r:
+        break
