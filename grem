@@ -28,7 +28,7 @@ def decode_file(f, b):
 
 
 def colored(s, n):
-    return f'\x1b[3{n}m{s}\x1b[0m'
+    return f'\x1b[3{n}m{s}\x1b[0m' if sys.stdout.isatty() else s
 
 
 def to_git_bash_path(p):
